@@ -1,0 +1,84 @@
+model:
+  name: battery
+  hyperparameters:
+    action_dim: 101
+    preferences: [1, 0]
+    n: 1
+    episode_length: 500
+    init_soc: 0.3
+    init_soh: 0.9
+    ito_soc: 0
+    ito_soh: 0
+    ito_temp: 0
+    frequency: 1
+    frequency_ratio: 1
+    enable_reward_shaping: False
+    reward_shaping_slack: 0.
+    random_start: false
+    vc1: 0
+    vc2: 0
+    V_max: 3.6
+    Tf: 25
+    Tc: 25
+    Ts: 25
+    Rc: 1.94
+    Ru: 3.08
+    Cc: 62.7
+    Cs: 4.5
+    z: 0.55
+    R: 8.3144598
+    Cn: 2.3
+    dtao: 6
+    pdfmean: 0
+    pdfstd: 1
+    R0c: 0.0055
+    R0d: 0.0048
+    Tref_R0c: 22.2477
+    Tref_R0d: 31.0494
+    Tshift_R0c: -11.5943
+    Tshift_R0d: -15.3253
+    R1c: [ 0.0016, -0.0032, 0.0045 ]
+    R1d: [ 7.1135e-4, -4.3865e-4, 2.3788e-4 ]
+    Tref_R1c: 159.2819
+    Tref_R1d: 347.4707
+    Tshift_R1c: -41.4548
+    Tshift_R1d: -79.5816
+    R2c: [ 0.0113, -0.027, 0.0339 ]
+    R2d: [ 0.0288, -0.073, 0.0605 ]
+    Tref_R2c: 16.6712
+    Tref_R2d: 17.0224
+    C1c: [ 523.215, 6.4171e+3, -7.5555e+3, 50.7107, -131.2298, 162.4688 ]
+    C1d: [ 335.4518, 3.1712e+3, -1.3214e+3, 53.2138, -65.4786, 44.3761 ]
+    C2c: [ 6.2449e+4, -1.055e+5, 4.4432e+4, 198.9753, 7.5621e+3, -6.9365e+3 ]
+    C2d: [ 3.1887e+4, -1.1593e+5, 1.0493e+5, 60.3114, 1.0175e+4, -9.5924e+3 ]
+
+dqn:
+  name: dqn
+  hyperparameters:
+    learning_rate : 0.1 #0.00001
+    #num_hidden_layers : 2
+    #hidden_dim : 512  #512
+    hidden_layers: [32, 64]   #[256 256]
+    batch_size: 5    #default 32
+    step_size: 5 #episodes
+    red_factor: 0.5
+    memory_size: 1000000000
+    dueling: False    # default: True
+
+
+train:
+  mode: 'save'
+  use_gpu: True
+  num_processes: 2
+  num_dvs: 1
+  train_episodes : 200
+  eval_episodes : 200
+  max_steps : 500
+  max_steps_eval : 200
+  target_update_freq : 10    # episodes
+  gamma : 0.99  # Default: 0.99
+  epsilon : 1
+  tau : 0.00001
+  final_epsilon: 0.1
+  decay_rate : 0.9999
+  epsilon_min: 0.1
