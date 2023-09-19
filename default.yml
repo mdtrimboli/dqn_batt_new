@@ -1,7 +1,7 @@
 model:
   name: battery
   hyperparameters:
-    action_dim: 101
+    action_dim: 100
     preferences: [1, 0]
     n: 1
     episode_length: 500

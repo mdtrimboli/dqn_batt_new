@@ -42,13 +42,13 @@ STEP 1: Set the Training Parameters
         solved_score (float): the average score required for the environment to be considered solved
         (here we set the solved_score a little higher than 13 [i.e., 14] to ensure robust learning).
     """
-num_episodes = 2000
+num_episodes = 15000
 epsilon = 1.0
 epsilon_min = 0.05
 epsilon_decay = 0.99
 scores = []
-scores_average_window = 100
-solved_score = -43.33
+scores_average_window = 200
+solved_score = -44.6
 
 with open("default.yml", "r") as f:
     config = yaml.safe_load(f)
@@ -80,6 +80,7 @@ STEP 4: Determine the size of the Action and State Spaces
 
 # Set the number of actions or action size
 action_size = env.action_size
+print(action_size)
 
 
 # Set the size of state observations or state size
@@ -155,12 +156,10 @@ for i_episode in range(1, num_episodes + 1):
         step += 1
         # determine epsilon-greedy action from current sate
         action_index = agent.act(state, epsilon)
-        action = action_index * 0.01
+        action = action_index/100
 
-        if action > 1:
-            print(action)
         actions += action
-
+        #print('Episode {}\tStep: {}\tAction: {}\tSUM_Action: {}'.format(i_episode, step, action, actions), end="")
 
         # send the action to the environment and receive resultant environment information
         next_state, reward, done, soh = env.step(action)
@@ -191,15 +190,15 @@ for i_episode in range(1, num_episodes + 1):
     epsilon = max(epsilon_min, epsilon_decay * epsilon)
 
     # (Over-) Print current average score
-    print("\rEpsilon = {}".format(epsilon), end="")
+    #print("\rEpsilon = {}".format(epsilon), end="")
     #print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, average_score), end="")
     print('\rEpisode {}\tScore: {:.2f}\tAvg_Action: {:.2f}'.format(i_episode, score[0], actions/step), end="")
 
     # Print average score every scores_average_window episodes
     if i_episode % scores_average_window == 0:
-        print("\rEpsilon = {}".format(epsilon))
-        print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, average_score))
-        print('\rEpisode {}\tScore: {:.2f}\tAvg_Action: {:.2f}'.format(i_episode, score[0], actions/step))
+        #print("\rEpsilon = {}".format(epsilon))
+        #print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, average_score))
+        print('\rEpisode {}\tAvg_score: {:.2f}\tAvg_Action: {:.2f}'.format(i_episode, average_score, actions/step))
 
     # Check to see if the task is solved (i.e,. avearge_score > solved_score).
     # If yes, save the network weights and scores and end training.

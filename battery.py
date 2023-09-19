@@ -10,7 +10,7 @@ class Battery(gym.Env):
     def __init__(self, config):
         # Set the properties for spaces
         self._config = config["model"]["hyperparameters"]
-        action_range = np.arange(0, 1.01, 0.01)
+        action_range = np.arange(0.01, 1.01, 0.01)
         self.action_space = Discrete(len(action_range))
         self.action_size = len(action_range)
         #self.action_space = Box(low=-1, high=1, shape=(self._config.n,), dtype=np.float32)          # Maxi: Current
@@ -95,9 +95,9 @@ class Battery(gym.Env):
         #return reward, dw_reward
         return reward
 
-    def _move_agent(self, current):
+    def _move_agent(self, current_norm):
         # Old: Assume that frequency of motor is 1 (one action per second)
-        current = np.clip(-46. * current, -46., 0.)        # default: [0 -46]
+        current = np.clip(-46. * current_norm, -46., 0)        # default: [0 -46]
         self.curr_action = current
         self.calculate_params(current)          # Tm
         self.soc = self.calculate_soc(current)

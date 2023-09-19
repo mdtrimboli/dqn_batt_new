@@ -62,7 +62,7 @@ class Agent():
         self.learn_rate = learning_rate
         self.tau = target_tau
         self.update_rate = update_rate
-        self.seed = random.seed(seed)
+        #self.seed = random.seed(seed)
 
         """
         # DQN Agent Q-Network
