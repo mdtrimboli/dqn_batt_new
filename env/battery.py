@@ -138,7 +138,8 @@ class Battery(gym.Env):
         done = self._is_agent_outside_boundary()
                #or int(self._current_time // 1) > self._config.episode_length
 
-        return observation, [reward, dv_reward], done, soh
+        #return observation, [reward, dv_reward], done, soh
+        return observation, reward, done, soh
 
     def calculate_params(self, i):
         self.crate = abs(i / self.cbat)     # c-rate

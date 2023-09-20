@@ -32,7 +32,7 @@ STEP 1: Set the Test Parameters
 ======
         num_episodes (int): number of test episodes
 """
-num_episodes = 10
+num_episodes = 1
 temp_buffer = []
 current_buffer = []
 voltage_buffer = []
@@ -138,8 +138,6 @@ while True:
     # send the action to the environment and receive resultant environment information
     next_state, reward, done, soh  = env.step(action)
 
-    print(action)
-
     temp_buffer.append(next_state["agent_position"] * 45.)
     current_buffer.append(action * -46)
     voltage_buffer.append(next_state["agent_voltage"])
@@ -157,8 +155,6 @@ while True:
     # then exit episode loop, to begin new episode
     if done:
         break
-
-print(current_buffer)
 
 g.electric_plot(temp_buffer, voltage_buffer, current_buffer, soc_buffer)
 
