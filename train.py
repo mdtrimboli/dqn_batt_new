@@ -47,8 +47,9 @@ epsilon = 1.0
 epsilon_min = 0.05
 epsilon_decay = 0.99
 scores = []
+episodic_rew = []
 scores_average_window = 200
-solved_score = -44.6
+solved_score = -55
 
 with open("default.yml", "r") as f:
     config = yaml.safe_load(f)
@@ -80,7 +81,6 @@ STEP 4: Determine the size of the Action and State Spaces
 
 # Set the number of actions or action size
 action_size = env.action_size
-print(action_size)
 
 
 # Set the size of state observations or state size
@@ -184,6 +184,7 @@ for i_episode in range(1, num_episodes + 1):
     # Mean score is calculated over current episodes until i_episode > 100
     scores.append(score)
     average_score = np.mean(scores[i_episode - min(i_episode, scores_average_window):i_episode + 1])
+    episodic_rew.append(average_score)
 
     # Decrease epsilon for epsilon-greedy policy by decay rate
     # Use max method to make sure epsilon doesn't decrease below epsilon_min
@@ -192,7 +193,7 @@ for i_episode in range(1, num_episodes + 1):
     # (Over-) Print current average score
     #print("\rEpsilon = {}".format(epsilon), end="")
     #print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, average_score), end="")
-    print('\rEpisode {}\tScore: {:.2f}\tAvg_Action: {:.2f}'.format(i_episode, score[0], actions/step), end="")
+    print('\rEpisode {}\tScore: {:.2f}\tAvg_Action: {:.2f}'.format(i_episode, average_score, actions/step), end="")
 
     # Print average score every scores_average_window episodes
     if i_episode % scores_average_window == 0:

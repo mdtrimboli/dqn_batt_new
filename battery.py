@@ -78,16 +78,15 @@ class Battery(gym.Env):
         # return self.step(np.zeros(self._config.n))[0]
 
     def _get_reward(self):
-        reward_soc = self.soc - 1
+
         #reward_soc = self.curr_action + 1 / self._current_time
 
-        if self._agent_position > 1.:
-            reward_soh = np.array([-1.])
-
-        else:
+        if self._agent_position < 1.:
+            reward_soc = self.soc - 1
             reward_soh = np.array([0.])
-            #reward_soh = self._agent_position
-
+        else:
+            reward_soc = np.array([-1.])
+            reward_soh = np.array([-1.])
 
         reward = [reward_soc, reward_soh]
         dw_reward = [abs(x) for x in reward]

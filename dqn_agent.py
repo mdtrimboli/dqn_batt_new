@@ -38,7 +38,7 @@ class Agent():
         Replay Memory Buffer from Replay Buffer Class (define below)
     """
 
-    def __init__(self, state_size, action_size, dqn_type='DQN', replay_memory_size=1e5, batch_size=64, gamma=0.99,
+    def __init__(self, state_size, action_size, dqn_type='DQN', replay_memory_size=5e4, batch_size=64, gamma=0.995,
                  learning_rate=1e-3, target_tau=2e-3, update_rate=4, seed=0):
 
         """
@@ -107,10 +107,12 @@ class Agent():
             state (array_like): current state
             eps (float): epsilon, for epsilon-greedy action selection
         """
-        state = torch.from_numpy(state).float().unsqueeze(0).to(device)
+        #state = torch.from_numpy(state).float().unsqueeze(0).to(device)
+        state = torch.from_numpy(state).float().squeeze(0).to(device)
         self.network.eval()
         with torch.no_grad():
             action_values = self.network(state)
+
         self.network.train()
 
         # Epsilon-greedy action selection
