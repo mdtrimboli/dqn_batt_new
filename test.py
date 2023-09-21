@@ -18,6 +18,7 @@ Code Expanded and Adapted from Code provided by Udacity DRL Team, 2018.
 # Import Required Packages
 import torch
 import yaml
+import os
 import time
 import random
 import numpy as np
@@ -154,9 +155,23 @@ while True:
     # If unity indicates that episode is done,
     # then exit episode loop, to begin new episode
     if done:
+        elec_variables = {'current': current_buffer,
+                          'temperature': temp_buffer,
+                          'voltage': voltage_buffer,
+                          'soc': soc_buffer}
+
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        # Save the recorded Scores data
+        scores_filename = "dqnAgent_variables_Ito1" + timestr + ".csv"
+        result_folder = "curves"
+        filename = os.path.join(result_folder, scores_filename)
+        score_path = os.path.join(os.getcwd(), filename)
+        np.savetxt(score_path, elec_variables, delimiter=",")
+
+
         break
 
-g.electric_plot(temp_buffer, voltage_buffer, current_buffer, soc_buffer)
+#g.electric_plot(temp_buffer, voltage_buffer, current_buffer, soc_buffer)
 
 
 # END :) #############
