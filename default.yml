@@ -9,7 +9,7 @@ model:
     init_soh: 0.9
     ito_soc: 0
     ito_soh: 0
-    ito_temp: 0
+    ito_temp: 1
     frequency: 1
     frequency_ratio: 1
     enable_reward_shaping: False

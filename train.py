@@ -49,7 +49,7 @@ epsilon_decay = 0.99
 scores = []
 episodic_rew = []
 scores_average_window = 200
-solved_score = -44.6
+solved_score = -55
 
 with open("default.yml", "r") as f:
     config = yaml.safe_load(f)
