@@ -84,9 +84,9 @@ class Agent():
     ########################################################
     # STEP() method
     #
-    def step(self, state, action, reward, next_state, done):
+    def step(self, state, action, dv, reward, dv_reward, next_state, done):
         # Save experience in replay memory
-        self.memory.add(state, action, reward, next_state, done)
+        self.memory.add(state, action, dv, reward, dv_reward, next_state, done)
 
         # Learn every UPDATE_EVERY time steps.
         self.t_step = (self.t_step + 1) % self.update_rate
@@ -99,7 +99,7 @@ class Agent():
     ########################################################
     # ACT() method
     #
-    def act(self, state, eps=0.0):
+    def get_values(self, state):
         """Returns actions for given state as per current policy.
 
         Params
@@ -111,17 +111,11 @@ class Agent():
         state = torch.from_numpy(state).float().squeeze(0).to(device)
         self.network.eval()
         with torch.no_grad():
-            action_values = self.network(state)
+            action_values, value_outs, dv_values = self.network(state)
 
         self.network.train()
+        return action_values, value_outs, dv_values
 
-        # Epsilon-greedy action selection
-        if random.random() > eps:
-            action = np.argmax(action_values.cpu().data.numpy())
-            return action
-
-        else:
-            return random.choice(np.arange(self.action_size))
 
     ########################################################
     # LEARN() method

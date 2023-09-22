@@ -25,9 +25,9 @@ import os
 import random
 import numpy as np
 from collections import deque
+
 from dqn_agent import Agent
-
-
+from multiobjective import MODQNTrainer
 from battery import Battery
 """
 ###################################
@@ -43,6 +43,11 @@ STEP 1: Set the Training Parameters
         (here we set the solved_score a little higher than 13 [i.e., 14] to ensure robust learning).
     """
 num_episodes = 15000
+num_objectives = 2
+
+dict_dqn = {}
+dqn_values = {}
+
 epsilon = 1.0
 epsilon_min = 0.05
 epsilon_decay = 0.99
@@ -62,26 +67,12 @@ STEP 2: Start Environment
 env = Battery(config)
 
 """
-
 #############################################
 STEP 4: Determine the size of the Action and State Spaces
-# 
-# The simulation contains a single agent that navigates a large environment.  
-# At each time step, it can perform four possible actions:
-# - `0` - walk forward 
-# - `1` - walk backward
-# - `2` - turn left
-# - `3` - turn right
-# 
-# The state space has `37` dimensions and contains the agent's velocity, 
-# along with ray-based perception of objects around agent's forward direction.  
-# A reward of `+1` is provided for collecting a yellow banana, and a reward of 
-# `-1` is provided for collecting a purple banana. 
 """
 
 # Set the number of actions or action size
 action_size = env.action_size
-
 
 # Set the size of state observations or state size
 state_size = env.observation_size
@@ -109,7 +100,23 @@ with 2 x 128 node hidden layers. The network can be modified by changing model.p
 Here we initialize an agent using the Unity environments state and action size determined above 
 and the default DQN hyperparameter settings.
 """
-agent = Agent(state_size=state_size, action_size=action_size, dqn_type='DQN')
+
+# Create dictionaries
+for i in range(num_objectives):
+    dqn = {
+        "model": "",
+        "q_values": "",
+        "d_values": "",
+        "sd_values": ""
+    }
+    dict_dqn[f'dqn_{i + 1}'] = dqn
+
+
+for dqn in range(num_objectives):
+    dqn_module = Agent(state_size=state_size, action_size=action_size, dqn_type='DQN')
+    dict_dqn[f"dqn_{dqn + 1}"]['model'] = dqn_module
+
+modqn = MODQNTrainer(action_size)
 
 """
 ###################################
@@ -138,7 +145,7 @@ That is, if the average score for the previous 100 episodes is greater than solv
 # loop from num_episodes
 for i_episode in range(1, num_episodes + 1):
 
-    # reset the unity environment at the beginning of each episode
+    #   reset the unity environment at the beginning of each episode
     state = env.reset()
     state = np.array([valor[0] for valor in state.values()])
 
@@ -154,8 +161,17 @@ for i_episode in range(1, num_episodes + 1):
     # Otherwise repeat until done == true
     while True:
         step += 1
-        # determine epsilon-greedy action from current sate
-        action_index = agent.act(state, epsilon)
+
+        for dqn in range(num_objectives):
+            qv, dv, sdv = dict_dqn[f"dqn_{dqn + 1}"]['model'].get_values(state)
+            dict_dqn[f"dqn_{dqn + 1}"]['q_values'] = qv
+            dict_dqn[f"dqn_{dqn + 1}"]['d_values'] = dv
+            dict_dqn[f"dqn_{dqn + 1}"]['sd_values'] = sdv
+
+        #TODO: Aca hay que juntar a los valores
+
+        # determine epsilon-greedy action from current state
+        action_index = modqn.get_action(q_values, epsilon)
         action = action_index/100
 
         actions += action

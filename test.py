@@ -167,8 +167,6 @@ while True:
         filename = os.path.join(result_folder, scores_filename)
         score_path = os.path.join(os.getcwd(), filename)
         np.savetxt(score_path, elec_variables, delimiter=",")
-
-
         break
 
 #g.electric_plot(temp_buffer, voltage_buffer, current_buffer, soc_buffer)
