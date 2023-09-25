@@ -1,4 +1,5 @@
 import random
+import torch
 import numpy as np
 
 class MODQNTrainer:
@@ -16,3 +17,29 @@ class MODQNTrainer:
             return action
         else:
             return random.choice(np.arange(self.action_size))
+
+    def scaled_q_values(self, q_values):
+        min_value = q_values.min()
+        max_value = q_values.max()
+
+        # Escalar el tensor
+        scaled_tensor = (q_values - min_value) / (max_value - min_value)
+        return scaled_tensor
+
+    def sum_weighted_q_values(self, dictionary, num_objectives, priorities):
+        q_values = 0
+
+        for i in range(num_objectives):
+            clave = f'dqn_{i+1}'
+
+            dictionary[clave]['q_values'] = dictionary[clave]['q_values'] * priorities[i] * dictionary[clave]['d_values']
+
+        for i in range(num_objectives):
+            clave = f'dqn_{i+1}'
+            adder = dictionary[clave]['q_values']
+            q_values += adder
+
+        mu = torch.rand(len(q_values)) * 0.0001
+        q_values = q_values + mu
+
+        return q_values

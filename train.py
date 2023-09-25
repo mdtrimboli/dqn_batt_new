@@ -27,7 +27,7 @@ import numpy as np
 from collections import deque
 
 from dqn_agent import Agent
-from multiobjective import MODQNTrainer
+from multiobjective import MODQNTrainer as MODQN
 from battery import Battery
 """
 ###################################
@@ -44,6 +44,7 @@ STEP 1: Set the Training Parameters
     """
 num_episodes = 15000
 num_objectives = 2
+priorities = [0.5, 0.3]
 
 dict_dqn = {}
 dqn_values = {}
@@ -116,7 +117,7 @@ for dqn in range(num_objectives):
     dqn_module = Agent(state_size=state_size, action_size=action_size, dqn_type='DQN')
     dict_dqn[f"dqn_{dqn + 1}"]['model'] = dqn_module
 
-modqn = MODQNTrainer(action_size)
+modqn = MODQN(action_size)
 
 """
 ###################################
@@ -164,14 +165,16 @@ for i_episode in range(1, num_episodes + 1):
 
         for dqn in range(num_objectives):
             qv, dv, sdv = dict_dqn[f"dqn_{dqn + 1}"]['model'].get_values(state)
-            dict_dqn[f"dqn_{dqn + 1}"]['q_values'] = qv
+
+            dict_dqn[f"dqn_{dqn + 1}"]['q_values'] = modqn.scaled_q_values(qv)
             dict_dqn[f"dqn_{dqn + 1}"]['d_values'] = dv
             dict_dqn[f"dqn_{dqn + 1}"]['sd_values'] = sdv
 
-        #TODO: Aca hay que juntar a los valores
-
         # determine epsilon-greedy action from current state
-        action_index = modqn.get_action(q_values, epsilon)
+        q_values_unified = modqn.sum_weighted_q_values(dict_dqn, num_objectives, priorities)
+        action_index = modqn.get_action(q_values_unified, epsilon)
+
+        #action_index = modqn.get_action(q_values, epsilon)
         action = action_index/100
 
         actions += action
@@ -182,7 +185,10 @@ for i_episode in range(1, num_episodes + 1):
         next_state = np.array([valor[0] for valor in next_state.values()])
 
         # Send (S, A, R, S') info to the DQN agent for a neural network update
-        agent.step(state, action, reward, next_state, done)
+        for dqn in range(num_objectives):
+            #TODO: Agregar DV_reward (obs, action, selected_dvs, rew_with_bias, dv_rew, new_obs, float(done))
+            dict_dqn[f"dqn_{dqn + 1}"]['model'].step(state, action, reward[dqn], next_state, done)
+        #agent.step(state, action, reward, next_state, done)
 
         # set new state to current state for determining next action
         state = next_state

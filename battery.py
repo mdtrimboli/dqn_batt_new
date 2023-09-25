@@ -79,20 +79,18 @@ class Battery(gym.Env):
 
     def _get_reward(self):
 
-        #reward_soc = self.curr_action + 1 / self._current_time
+        reward_soc = self.soc - 1
 
         if self._agent_position < 1.:
-            reward_soc = self.soc - 1
             reward_soh = np.array([0.])
         else:
-            reward_soc = np.array([-1.])
             reward_soh = np.array([-1.])
 
         reward = [reward_soc, reward_soh]
         dw_reward = [abs(x) for x in reward]
 
-        #return reward, dw_reward
-        return reward
+        return reward, dw_reward
+
 
     def _move_agent(self, current_norm):
         # Old: Assume that frequency of motor is 1 (one action per second)

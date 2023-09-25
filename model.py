@@ -20,7 +20,7 @@ class QNetwork(nn.Module):
     Initialize parameters and build model.
     """
 
-    def __init__(self, state_size, action_size, seed, num_dvs=2, fc1_units=128, fc2_units=128):
+    def __init__(self, state_size, action_size, seed, num_dvs=1, fc1_units=128, fc2_units=128):
         """
         Params
         ======
