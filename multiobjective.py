@@ -27,6 +27,7 @@ class MODQNTrainer:
         return scaled_tensor
 
     def sum_weighted_q_values(self, dictionary, num_objectives, priorities):
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         q_values = 0
 
         for i in range(num_objectives):
@@ -39,7 +40,7 @@ class MODQNTrainer:
             adder = dictionary[clave]['q_values']
             q_values += adder
 
-        mu = torch.rand(len(q_values)) * 0.0001
+        mu = (torch.rand(len(q_values)) * 0.0001).to(device)
         q_values = q_values + mu
 
         return q_values
