@@ -138,7 +138,7 @@ class Battery(gym.Env):
                #or int(self._current_time // 1) > self._config.episode_length
 
         #return observation, [reward, dv_reward], done, soh
-        return observation, reward, done, soh
+        return observation, reward, done, dv_reward
 
     def calculate_params(self, i):
         self.crate = abs(i / self.cbat)     # c-rate
