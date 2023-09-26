@@ -74,6 +74,7 @@ class Agent():
         self.network = QNetwork(state_size, action_size, seed).to(device)
         self.target_network = QNetwork(state_size, action_size, seed).to(device)
         self.optimizer = optim.Adam(self.network.parameters(), lr=self.learn_rate)
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         # Replay memory
         self.memory = ReplayBuffer(action_size, self.buffer_size, self.batch_size, seed)
@@ -129,10 +130,15 @@ class Agent():
             gamma (float): discount factor
         """
 
-        states, actions, rewards, next_states, dones = experiences
+        states, actions, d_values, rewards, dv_rewards, next_states, dones = experiences
 
         # Get Q values from current observations (s, a) using model nextwork
-        Qsa = self.network(states).gather(1, actions)
+        output_tuple = self.network(states)
+
+        Qsa = output_tuple[0].gather(1, actions)
+        dvs = output_tuple[1]
+
+        #Qsa, dvs, sdvs = self.network(states).gather(1, actions)
 
         if (self.dqn_type == 'DDQN'):
             # Double DQN
@@ -144,14 +150,28 @@ class Agent():
             # Regular (Vanilla) DQN
             # ************************
             # Get max Q values for (s',a') from target model
-            Qsa_prime_target_values = self.target_network(next_states).detach()
+
+            Qsa_prime_target_values, dv_targets_values, sdv_targets = self.target_network(next_states)
+            Qsa_prime_target_values = Qsa_prime_target_values.detach()
+            dv_targets_values = dv_targets_values.detach()
+
             Qsa_prime_targets = Qsa_prime_target_values.max(1)[0].unsqueeze(1)
+
 
             # Compute Q targets for current states
         Qsa_targets = rewards + (gamma * Qsa_prime_targets * (1 - dones))
+        dv_targets = dv_rewards + (gamma * dv_targets_values * (1 - dones))
+
+
+        sdv_scale_error1 = (0.5 - torch.mean(dvs)).to(self.device)
+        sdv_scale_error2 = (1.0 - (torch.max(dvs) - torch.min(dvs))).to(self.device)
 
         # Compute loss (error)
-        loss = F.mse_loss(Qsa, Qsa_targets)
+        loss_qv = F.mse_loss(Qsa, Qsa_targets)
+        loss_dv = F.mse_loss(d_values, dv_targets)
+        loss_sdv = torch.sum(torch.pow(sdv_scale_error1, 2)) + torch.sum(torch.pow(sdv_scale_error2, 2))
+
+        loss = loss_qv + loss_dv + loss_sdv
 
         # Minimize the loss
         self.optimizer.zero_grad()
