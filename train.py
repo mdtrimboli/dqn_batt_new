@@ -214,12 +214,10 @@ for i_episode in range(1, num_episodes + 1):
     for dqn in range(num_objectives):
         scores_avg[f"dqn_{dqn + 1}"].append(scores[dqn][0])
     #scores.append(score)
-    print(scores_avg)
     for dqn in range(num_objectives):
         episodic_rew.append(np.mean(scores_avg[f"dqn_{dqn + 1}"][i_episode - min(i_episode, scores_average_window):i_episode + 1]))
     #average_score = np.mean(scores_avg[i_episode - min(i_episode, scores_average_window):i_episode + 1])
     #episodic_rew.append(average_score)
-
     # Decrease epsilon for epsilon-greedy policy by decay rate
     # Use max method to make sure epsilon doesn't decrease below epsilon_min
     epsilon = max(epsilon_min, epsilon_decay * epsilon)
@@ -227,18 +225,18 @@ for i_episode in range(1, num_episodes + 1):
     # (Over-) Print current average score
     #print("\rEpsilon = {}".format(epsilon), end="")
     #print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, average_score), end="")
-    print('\rEpisode {}\tScore: {:.2f}\tAvg_Action: {:.2f}'.format(i_episode, episodic_rew, actions/step), end="")
+    print('\rEpisode {}\tScore: {}\tAvg_Action: {:.2f}'.format(i_episode, episodic_rew, actions/step), end="")
 
     # Print average score every scores_average_window episodes
     if i_episode % scores_average_window == 0:
         #print("\rEpsilon = {}".format(epsilon))
         #print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, average_score))
-        print('\rEpisode {}\tAvg_score: {:.2f}\tAvg_Action: {:.2f}'.format(i_episode, episodic_rew, actions/step))
+        print('\rEpisode {}\tAvg_score: {}\tAvg_Action: {:.2f}'.format(i_episode, episodic_rew, actions/step))
 
     # Check to see if the task is solved (i.e,. avearge_score > solved_score).
     # If yes, save the network weights and scores and end training.
-    if average_score >= solved_score:
-        print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(i_episode, average_score))
+    if episodic_rew[0] >= solved_score:
+        print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(i_episode, episodic_rew[0]))
 
         # Save trained neural network weights
         timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -246,14 +244,16 @@ for i_episode in range(1, num_episodes + 1):
         nn_filename = "dqnAgent_Trained_Model_" + timestr + ".pth"
         filename = os.path.join(weight_folder, nn_filename)
         weight_path = os.path.join(os.getcwd(), filename)
-        torch.save(agent.network.state_dict(), weight_path)
+        #torch.save(agent.network.state_dict(), weight_path)
+        # TODO: Guardar pesos de ambos modelos
 
         # Save the recorded Scores data
+        # TODO: Ver que variables guardar
         scores_filename = "dqnAgent_scores_" + timestr + ".csv"
         result_folder = "score"
         filename = os.path.join(result_folder, scores_filename)
         score_path = os.path.join(os.getcwd(), filename)
-        np.savetxt(score_path, scores, delimiter=",")
+        #np.savetxt(score_path, scores, delimiter=",")
         break
 
 """
