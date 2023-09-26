@@ -44,18 +44,19 @@ STEP 1: Set the Training Parameters
     """
 num_episodes = 15000
 num_objectives = 2
-priorities = [0.5, 0.3]
+priorities = [1, 1]
 
 dict_dqn = {}
 dqn_values = {}
+scores = [0] * num_objectives
+scores_avg = {}
 
 epsilon = 1.0
 epsilon_min = 0.05
 epsilon_decay = 0.99
-scores = []
 episodic_rew = []
 scores_average_window = 200
-solved_score = -55
+solved_score = -20
 
 with open("default.yml", "r") as f:
     config = yaml.safe_load(f)
@@ -113,9 +114,12 @@ for i in range(num_objectives):
     dict_dqn[f'dqn_{i + 1}'] = dqn
 
 
+
+
 for dqn in range(num_objectives):
     dqn_module = Agent(state_size=state_size, action_size=action_size, dqn_type='DQN')
     dict_dqn[f"dqn_{dqn + 1}"]['model'] = dqn_module
+    scores_avg[f"dqn_{dqn + 1}"] = []
 
 modqn = MODQN(action_size)
 
@@ -151,10 +155,11 @@ for i_episode in range(1, num_episodes + 1):
     state = np.array([valor[0] for valor in state.values()])
 
     # set the initial episode score to zero.
-    score = 0
+    score_O1 = 0
+    score_O2 = 0
     step = 0
     actions = 0
-
+    episodic_rew = []
     # Run the episode training loop;
     # At each loop step take an epsilon-greedy action as a function of the current state observations
     # Based on the resultant environmental state (next_state) and reward received update the Agent network
@@ -181,20 +186,22 @@ for i_episode in range(1, num_episodes + 1):
         #print('Episode {}\tStep: {}\tAction: {}\tSUM_Action: {}'.format(i_episode, step, action, actions), end="")
 
         # send the action to the environment and receive resultant environment information
-        next_state, reward, done, soh = env.step(action)
+        next_state, reward, done, dv_reward = env.step(action)
         next_state = np.array([valor[0] for valor in next_state.values()])
 
         # Send (S, A, R, S') info to the DQN agent for a neural network update
         for dqn in range(num_objectives):
-            #TODO: Agregar DV_reward (obs, action, selected_dvs, rew_with_bias, dv_rew, new_obs, float(done))
-            dict_dqn[f"dqn_{dqn + 1}"]['model'].step(state, action, reward[dqn], next_state, done)
+            dict_dqn[f"dqn_{dqn + 1}"]['model'].step(state, action, dict_dqn[f"dqn_{dqn + 1}"]['d_values'], reward[dqn], dv_reward[dqn], next_state, done)
+            scores[dqn] += reward[dqn]
+
         #agent.step(state, action, reward, next_state, done)
 
         # set new state to current state for determining next action
         state = next_state
 
         # Update episode score
-        score += reward
+        #score_O1 += reward[0]
+        #score_O2 += reward[1]
 
         # If unity indicates that episode is done,
         # then exit episode loop, to begin new episode
@@ -204,9 +211,14 @@ for i_episode in range(1, num_episodes + 1):
     # Add episode score to Scores and...
     # Calculate mean score over last 100 episodes
     # Mean score is calculated over current episodes until i_episode > 100
-    scores.append(score)
-    average_score = np.mean(scores[i_episode - min(i_episode, scores_average_window):i_episode + 1])
-    episodic_rew.append(average_score)
+    for dqn in range(num_objectives):
+        scores_avg[f"dqn_{dqn + 1}"].append(scores[dqn][0])
+    #scores.append(score)
+    print(scores_avg)
+    for dqn in range(num_objectives):
+        episodic_rew.append(np.mean(scores_avg[f"dqn_{dqn + 1}"][i_episode - min(i_episode, scores_average_window):i_episode + 1]))
+    #average_score = np.mean(scores_avg[i_episode - min(i_episode, scores_average_window):i_episode + 1])
+    #episodic_rew.append(average_score)
 
     # Decrease epsilon for epsilon-greedy policy by decay rate
     # Use max method to make sure epsilon doesn't decrease below epsilon_min
@@ -215,13 +227,13 @@ for i_episode in range(1, num_episodes + 1):
     # (Over-) Print current average score
     #print("\rEpsilon = {}".format(epsilon), end="")
     #print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, average_score), end="")
-    print('\rEpisode {}\tScore: {:.2f}\tAvg_Action: {:.2f}'.format(i_episode, average_score, actions/step), end="")
+    print('\rEpisode {}\tScore: {:.2f}\tAvg_Action: {:.2f}'.format(i_episode, episodic_rew, actions/step), end="")
 
     # Print average score every scores_average_window episodes
     if i_episode % scores_average_window == 0:
         #print("\rEpsilon = {}".format(epsilon))
         #print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, average_score))
-        print('\rEpisode {}\tAvg_score: {:.2f}\tAvg_Action: {:.2f}'.format(i_episode, average_score, actions/step))
+        print('\rEpisode {}\tAvg_score: {:.2f}\tAvg_Action: {:.2f}'.format(i_episode, episodic_rew, actions/step))
 
     # Check to see if the task is solved (i.e,. avearge_score > solved_score).
     # If yes, save the network weights and scores and end training.
