@@ -155,8 +155,7 @@ for i_episode in range(1, num_episodes + 1):
     state = np.array([valor[0] for valor in state.values()])
 
     # set the initial episode score to zero.
-    score_O1 = 0
-    score_O2 = 0
+    scores = np.zeros(num_objectives, dtype=float)
     step = 0
     actions = 0
     episodic_rew = []
@@ -195,7 +194,6 @@ for i_episode in range(1, num_episodes + 1):
             scores[dqn] += reward[dqn]
 
         #agent.step(state, action, reward, next_state, done)
-
         # set new state to current state for determining next action
         state = next_state
 
@@ -212,10 +210,11 @@ for i_episode in range(1, num_episodes + 1):
     # Calculate mean score over last 100 episodes
     # Mean score is calculated over current episodes until i_episode > 100
     for dqn in range(num_objectives):
-        scores_avg[f"dqn_{dqn + 1}"].append(scores[dqn][0])
+        scores_avg[f"dqn_{dqn + 1}"].append(scores[dqn])
     #scores.append(score)
     for dqn in range(num_objectives):
         episodic_rew.append(np.mean(scores_avg[f"dqn_{dqn + 1}"][i_episode - min(i_episode, scores_average_window):i_episode + 1]))
+
     #average_score = np.mean(scores_avg[i_episode - min(i_episode, scores_average_window):i_episode + 1])
     #episodic_rew.append(average_score)
     # Decrease epsilon for epsilon-greedy policy by decay rate
@@ -223,15 +222,11 @@ for i_episode in range(1, num_episodes + 1):
     epsilon = max(epsilon_min, epsilon_decay * epsilon)
 
     # (Over-) Print current average score
-    #print("\rEpsilon = {}".format(epsilon), end="")
-    #print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, average_score), end="")
-    print('\rEpisode {}\tScore: {}\tAvg_Action: {:.2f}'.format(i_episode, episodic_rew, actions/step), end="")
+    print('\rEpisode {} \tSteps:{} \tScore: {}\tAvg_Action: {:.2f}'.format(i_episode, step, episodic_rew, actions/step), end="")
 
     # Print average score every scores_average_window episodes
     if i_episode % scores_average_window == 0:
-        #print("\rEpsilon = {}".format(epsilon))
-        #print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, average_score))
-        print('\rEpisode {}\tAvg_score: {}\tAvg_Action: {:.2f}'.format(i_episode, episodic_rew, actions/step))
+        print('\rEpisode {}\tSteps:{}\tAvg_score: {}\tAvg_Action: {:.2f}'.format(i_episode, step, episodic_rew, actions/step))
 
     # Check to see if the task is solved (i.e,. avearge_score > solved_score).
     # If yes, save the network weights and scores and end training.
