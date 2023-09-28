@@ -38,8 +38,8 @@ class Agent():
         Replay Memory Buffer from Replay Buffer Class (define below)
     """
 
-    def __init__(self, state_size, action_size, dqn_type='DQN', replay_memory_size=5e4, batch_size=64, gamma=0.995,
-                 learning_rate=1e-3, target_tau=2e-3, update_rate=4, seed=0):
+    def __init__(self, state_size, action_size, dqn_type='DQN', replay_memory_size=5e6, batch_size=256, gamma=0.995,
+                 learning_rate=1e-4, target_tau=2e-3, update_rate=8, seed=0):
 
         """
         DQN Agent Parameters
@@ -143,8 +143,16 @@ class Agent():
         if (self.dqn_type == 'DDQN'):
             # Double DQN
             # ************************
-            Qsa_prime_actions = self.network(next_states).detach().max(1)[1].unsqueeze(1)
-            Qsa_prime_targets = self.target_network(next_states)[Qsa_prime_actions].unsqueeze(1)
+            output_tuple = self.network(states)
+
+            Qsa_prime_actions = output_tuple[0].detach().max(1)[1]
+
+
+            Qsa_prime_targets, dv_targets_values, sdv_targets = self.target_network(next_states)
+            # Ver si esto está bien
+            Qsa_prime_targets = Qsa_prime_targets[torch.arange(64), Qsa_prime_actions].unsqueeze(-1)
+            #Qsa_prime_targets = Qsa_prime_targets[Qsa_prime_actions].unsqueeze(1)
+            #Qsa_prime_targets = self.target_network(next_states)[Qsa_prime_actions].unsqueeze(1)
 
         else:
             # Regular (Vanilla) DQN
@@ -159,14 +167,15 @@ class Agent():
 
 
             # Compute Q targets for current states
+
         Qsa_targets = rewards + (gamma * Qsa_prime_targets * (1 - dones))
         dv_targets = dv_rewards + (gamma * dv_targets_values * (1 - dones))
-
 
         sdv_scale_error1 = (0.5 - torch.mean(dvs)).to(self.device)
         sdv_scale_error2 = (1.0 - (torch.max(dvs) - torch.min(dvs))).to(self.device)
 
         # Compute loss (error)
+
         loss_qv = F.mse_loss(Qsa, Qsa_targets)
         loss_dv = F.mse_loss(d_values, dv_targets)
         loss_sdv = torch.sum(torch.pow(sdv_scale_error1, 2)) + torch.sum(torch.pow(sdv_scale_error2, 2))

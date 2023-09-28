@@ -42,7 +42,7 @@ STEP 1: Set the Training Parameters
         solved_score (float): the average score required for the environment to be considered solved
         (here we set the solved_score a little higher than 13 [i.e., 14] to ensure robust learning).
     """
-num_episodes = 15000
+num_episodes = 5000
 num_objectives = 2
 priorities = [1, 1]
 
@@ -56,7 +56,7 @@ epsilon_min = 0.05
 epsilon_decay = 0.99
 episodic_rew = []
 scores_average_window = 200
-solved_score = -20
+solved_score = -65
 
 with open("default.yml", "r") as f:
     config = yaml.safe_load(f)
@@ -187,6 +187,7 @@ for i_episode in range(1, num_episodes + 1):
         # send the action to the environment and receive resultant environment information
         next_state, reward, done, dv_reward = env.step(action)
         next_state = np.array([valor[0] for valor in next_state.values()])
+        #print(f"State: {next_state}, Action:{action}, Reward:{reward}")
 
         # Send (S, A, R, S') info to the DQN agent for a neural network update
         for dqn in range(num_objectives):
@@ -222,15 +223,15 @@ for i_episode in range(1, num_episodes + 1):
     epsilon = max(epsilon_min, epsilon_decay * epsilon)
 
     # (Over-) Print current average score
-    print('\rEpisode {} \tSteps:{} \tScore: {}\tAvg_Action: {:.2f}'.format(i_episode, step, episodic_rew, actions/step), end="")
+    print('\rEpisode {} \tScore: {}\tAvg_Action: {:.2f}\t Epsilon:{}'.format(i_episode, episodic_rew, actions/step, epsilon),  end="")
 
     # Print average score every scores_average_window episodes
     if i_episode % scores_average_window == 0:
-        print('\rEpisode {}\tSteps:{}\tAvg_score: {}\tAvg_Action: {:.2f}'.format(i_episode, step, episodic_rew, actions/step))
+        print('\rEpisode {}\tScore: {}\tAvg_Action: {:.2f}'.format(i_episode, episodic_rew, actions/step))
 
     # Check to see if the task is solved (i.e,. avearge_score > solved_score).
     # If yes, save the network weights and scores and end training.
-    if episodic_rew[0] >= solved_score:
+    if episodic_rew[0] >= solved_score or i_episode==num_episodes:
         print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(i_episode, episodic_rew[0]))
 
         # Save trained neural network weights

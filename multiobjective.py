@@ -32,15 +32,15 @@ class MODQNTrainer:
 
         for i in range(num_objectives):
             clave = f'dqn_{i+1}'
-
             dictionary[clave]['q_values'] = dictionary[clave]['q_values'] * priorities[i] * dictionary[clave]['d_values']
+
 
         for i in range(num_objectives):
             clave = f'dqn_{i+1}'
             adder = dictionary[clave]['q_values']
             q_values += adder
 
-        mu = (torch.rand(len(q_values)) * 0.0001).to(device)
-        q_values = q_values + mu
+        #mu = (torch.rand(len(q_values)) * 0.0001).to(device)
+        #q_values = q_values + mu
 
         return q_values
