@@ -1,10 +1,40 @@
 import matplotlib.pyplot as plt
 from numpy import ones
+import json
 
 
-def plotting_reward(rewards, time_steps):
-    rew1 = [sublist[0] for sublist in rewards]
-    rew2 = [sublist[1] for sublist in rewards]
+def plotting_reward():
+    with open("scores_avg.json", "r") as archivo_json:
+        # Carga los datos JSON desde el archivo
+        datos = json.load(archivo_json)
+    # Extrae las listas de las claves del diccionario
+    lista1 = datos.get("dqn_1", [])
+    lista2 = datos.get("dqn_2", [])
+
+    # Crea subplots
+    plt.figure(figsize=(10, 4))  # Tamaño de la figura
+
+    # Subplot 1
+    plt.subplot(1, 2, 1)  # 1 fila, 2 columnas, primer subplot
+    plt.plot(lista1)
+    plt.title("Objective 1")
+    plt.xlabel("Episode")
+    plt.ylabel("Episodic Reward")
+
+    # Subplot 2
+    plt.subplot(1, 2, 2)  # 1 fila, 2 columnas, segundo subplot
+    plt.plot(lista2)
+    plt.title("Objective 2")
+    plt.xlabel("Episode")
+    plt.ylabel("Episodic Reward")
+
+    # Ajusta el espacio entre los subplots
+    plt.tight_layout()
+
+    # Muestra el gráfico
+    plt.show()
+
+    """
     steps = range(len(rew1))
     plt.plot(steps, rew1, marker='o')
     plt.plot(steps, rew2, marker='o')
@@ -14,7 +44,8 @@ def plotting_reward(rewards, time_steps):
     plt.grid(True)
     plt.legend(["Objective 1", "Objective 2"], loc="right")
     plt.show()
-    plt.savefig('curves/reward.png', dpi=600)
+    """
+    #plt.savefig('curves/reward.png', dpi=600)
 
 
 def plotting_length(length):
@@ -86,5 +117,5 @@ def electric_plot(t_curve, v_curve, i_curve, soc_curve):
     plt.show()
 
 
-
+plotting_reward()
 

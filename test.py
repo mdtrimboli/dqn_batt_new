@@ -17,6 +17,7 @@ Code Expanded and Adapted from Code provided by Udacity DRL Team, 2018.
 ###################################
 # Import Required Packages
 import torch
+import json
 import yaml
 import os
 import time
@@ -24,6 +25,7 @@ import random
 import numpy as np
 from dqn_agent import Agent
 from battery import Battery
+from multiobjective import MODQNTrainer as MODQN
 
 import graphics as g
 
@@ -34,10 +36,13 @@ STEP 1: Set the Test Parameters
         num_episodes (int): number of test episodes
 """
 num_episodes = 1
+num_objectives = 2
+priorities = [1, 1]
 temp_buffer = []
 current_buffer = []
 voltage_buffer = []
 soc_buffer = []
+dict_dqn = {}
 
 with open("default.yml", "r") as f:
     config = yaml.safe_load(f)
@@ -106,12 +111,27 @@ with 2 x 128 node hidden layers. The network can be modified by changing model.p
 Here we initialize an agent using the Unity environments state and action size determined above 
 We also load the model parameters from training
 """
+
+for i in range(num_objectives):
+    dqn = {
+        "model": "",
+        "q_values": "",
+        "d_values": "",
+        "sd_values": ""
+    }
+    dict_dqn[f'dqn_{i + 1}'] = dqn
+
 #Initialize Agent
-agent = Agent(state_size=state_size, action_size=action_size, seed=0)
+for dqn in range(num_objectives):
+    dqn_module = Agent(state_size=state_size, action_size=action_size, dqn_type='DQN')
+    dict_dqn[f"dqn_{dqn + 1}"]['model'] = dqn_module
 
-# Load trained model weights
-agent.network.load_state_dict(torch.load('model/dqnAgent_Trained_Model.pth'))
+for dqn in range(num_objectives):
+    # Load trained model weights
+    dict_dqn[f"dqn_{dqn + 1}"]['model'].network.load_state_dict(torch.load(f"model/dqnAgent_{dqn+1}_Trained_Model.pth"))
 
+
+modqn = MODQN(action_size)
 """
 ###################################
 STEP 6: Play Banana for specified number of Episodes
@@ -132,9 +152,18 @@ step = 0
 # Otherwise repeat until done == true
 while True:
     step += 1
-    # determine epsilon-greedy action from current sate
-    action_index = agent.act(state)
-    action = action_index * 0.01
+    for dqn in range(num_objectives):
+        qv, dv, sdv = dict_dqn[f"dqn_{dqn + 1}"]['model'].get_values(state)
+        dict_dqn[f"dqn_{dqn + 1}"]['d_values'] = dv
+        dict_dqn[f"dqn_{dqn + 1}"]['sd_values'] = sdv
+        dict_dqn[f"dqn_{dqn + 1}"]['q_values'] = modqn.scaled_q_values(qv)
+
+    # determine epsilon-greedy action from current state
+    q_values_unified = modqn.sum_weighted_q_values(dict_dqn, num_objectives, priorities)
+    action_index = modqn.get_action(q_values_unified)
+
+    # action_index = modqn.get_action(q_values, epsilon)
+    action = action_index / 100
 
     # send the action to the environment and receive resultant environment information
     next_state, reward, done, soh  = env.step(action)
@@ -150,7 +179,7 @@ while True:
     state = next_state
 
     # Update episode score
-    score += reward
+    #score += reward
 
     # If unity indicates that episode is done,
     # then exit episode loop, to begin new episode
@@ -160,16 +189,18 @@ while True:
                           'voltage': voltage_buffer,
                           'soc': soc_buffer}
 
+        print(elec_variables)
         timestr = time.strftime("%Y%m%d-%H%M%S")
         # Save the recorded Scores data
-        scores_filename = "dqnAgent_variables_Ito1" + timestr + ".csv"
+        scores_filename = "dqnAgent_variables_Ito0" + timestr + ".csv"
         result_folder = "curves"
         filename = os.path.join(result_folder, scores_filename)
         score_path = os.path.join(os.getcwd(), filename)
-        np.savetxt(score_path, elec_variables, delimiter=",")
+        #with open("elect_var.json", "w") as archivo:
+            #json.dump(elec_variables, archivo)
         break
 
-#g.electric_plot(temp_buffer, voltage_buffer, current_buffer, soc_buffer)
+g.electric_plot(temp_buffer, voltage_buffer, current_buffer, soc_buffer)
 
 
 # END :) #############

@@ -39,7 +39,8 @@ class QNetwork(nn.Module):
         self.fc_action_dv = nn.Linear(action_size, num_dvs)
 
         # Parámetros para el escalado de las variables de estado
-        self.dv_scale_mean = nn.Parameter(torch.Tensor([1.0]))
+        #self.dv_scale_mean = nn.Parameter(torch.Tensor([1.0]))
+        self.dv_scale_mean = nn.Parameter(torch.Tensor([1.]))
         self.dv_scale_std = nn.Parameter(torch.Tensor([0.0]))
 
     """

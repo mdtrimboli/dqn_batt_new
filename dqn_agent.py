@@ -39,7 +39,7 @@ class Agent():
     """
 
     def __init__(self, state_size, action_size, dqn_type='DQN', replay_memory_size=5e6, batch_size=256, gamma=0.995,
-                 learning_rate=1e-4, target_tau=2e-3, update_rate=8, seed=0):
+                 learning_rate=1e-3, target_tau=2e-3, update_rate=8, seed=0):
 
         """
         DQN Agent Parameters
@@ -136,7 +136,8 @@ class Agent():
         output_tuple = self.network(states)
 
         Qsa = output_tuple[0].gather(1, actions)
-        dvs = output_tuple[1]
+        s_values = output_tuple[1]
+        dvs = output_tuple[2]
 
         #Qsa, dvs, sdvs = self.network(states).gather(1, actions)
 
@@ -171,13 +172,17 @@ class Agent():
         Qsa_targets = rewards + (gamma * Qsa_prime_targets * (1 - dones))
         dv_targets = dv_rewards + (gamma * dv_targets_values * (1 - dones))
 
-        sdv_scale_error1 = (0.5 - torch.mean(dvs)).to(self.device)
-        sdv_scale_error2 = (1.0 - (torch.max(dvs) - torch.min(dvs))).to(self.device)
+        #sdv_scale_error1 = (0.5 - torch.mean(dvs)).to(self.device)
+        #sdv_scale_error2 = (1.0 - (torch.max(dvs) - torch.min(dvs))).to(self.device)
+
+        sdv_scale_error1 = torch.mean(dvs) - 1.
+        sdv_scale_error2 = torch.sqrt(torch.mean((dvs - torch.mean(dvs))**2))
+
 
         # Compute loss (error)
 
-        loss_qv = F.mse_loss(Qsa, Qsa_targets)
-        loss_dv = F.mse_loss(d_values, dv_targets)
+        loss_qv = F.huber_loss(Qsa, Qsa_targets)
+        loss_dv = F.huber_loss(s_values, dv_targets)
         loss_sdv = torch.sum(torch.pow(sdv_scale_error1, 2)) + torch.sum(torch.pow(sdv_scale_error2, 2))
 
         loss = loss_qv + loss_dv + loss_sdv

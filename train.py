@@ -22,6 +22,7 @@ import torch
 import time
 import yaml
 import os
+import json
 import random
 import numpy as np
 from collections import deque
@@ -235,20 +236,22 @@ for i_episode in range(1, num_episodes + 1):
         print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(i_episode, episodic_rew[0]))
 
         # Save trained neural network weights
-        timestr = time.strftime("%Y%m%d-%H%M%S")
         weight_folder = "model"
-        nn_filename = "dqnAgent_Trained_Model_" + timestr + ".pth"
-        filename = os.path.join(weight_folder, nn_filename)
-        weight_path = os.path.join(os.getcwd(), filename)
+        for dqn in range(num_objectives):
+            timestr = time.strftime("%Y%m%d-%H%M%S")
+            nn_filename = f"dqnAgent_{dqn+1}_Trained_Model_" + timestr + ".pth"
+            filename = os.path.join(weight_folder, nn_filename)
+            weight_path = os.path.join(os.getcwd(), filename)
+            torch.save(dict_dqn[f"dqn_{dqn + 1}"]['model'].network.state_dict(), weight_path)
         #torch.save(agent.network.state_dict(), weight_path)
-        # TODO: Guardar pesos de ambos modelos
 
         # Save the recorded Scores data
-        # TODO: Ver que variables guardar
         scores_filename = "dqnAgent_scores_" + timestr + ".csv"
         result_folder = "score"
         filename = os.path.join(result_folder, scores_filename)
         score_path = os.path.join(os.getcwd(), filename)
+        with open("scores_avg.json", "w") as archivo:
+            json.dump(scores_avg, archivo)
         #np.savetxt(score_path, scores, delimiter=",")
         break
 
